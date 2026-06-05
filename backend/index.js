@@ -32,7 +32,7 @@ app.post("/parse-resume", async (req, res) => {
 Input paragraph:
 "${rawInput}"
 
-Return this exact JSON structure:
+Return only this exact JSON structure:
 {
   "personal_info": {
     "name": "Full Name",
@@ -85,6 +85,25 @@ Rules:
 - Make descriptions quantifiable where possible
 - Return ONLY the JSON object, no other text`;
 
+    console.log("!!!!!Here is the Promt:", prompt);
+
+    // const response = await fetch(
+    //   `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+    //   {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({
+    //       contents: [{ parts: [{ text: prompt }] }],
+    //       generationConfig: {
+    //         temperature: 0.3,
+    //         maxOutputTokens: 2048,
+    //       },
+    //     }),
+    //   },
+    // );
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
       {
@@ -95,8 +114,14 @@ Rules:
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2048,
+            responseMimeType: "application/json",
+            temperature: 0.1,
+
+            maxOutputTokens: 8192,
+            // maxOutputTokens: 4096,
+            thinkingConfig: {
+              thinkingBudget: 200,
+            },
           },
         }),
       },
@@ -109,6 +134,8 @@ Rules:
 
     const data = await response.json();
 
+    console.log("!!!!!Here is the Response Data:", data);
+
     let text =
       data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
 
@@ -117,6 +144,8 @@ Rules:
         error: "No response from Gemini",
       });
     }
+
+    console.log("!!!!!Here is the Response Text:", text);
 
     // Clean AI nonsense
     text = text
